@@ -1,0 +1,73 @@
+#First Query#
+
+SELECT g.Name AS Genre, sum(il.UnitPrice * il.Quantity)
+FROM Genre g
+JOIN Track t
+ON g.GenreId = t.GenreId
+JOIN InvoiceLine il
+ON t.TrackId = il.TrackId
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 4
+
+
+#Second Query#
+
+SELECT
+	e.FirstName ||' '|| e.LastName AS 'Employee Name',
+	sum(i.Total) AS 'Total Sales',
+	count(DISTINCT c.CustomerId) AS 'Customers Per Agent'
+FROM Employee e
+JOIN Customer c
+ON e.EmployeeId = c.SupportRepId
+JOIN Invoice i
+ON c.CustomerId = i.CustomerId
+GROUP BY 1
+
+
+
+#Third Query#
+
+SELECT t1.'Customer Category', count(t1.'Customer Category') AS 'Count'
+FROM (SELECT
+	c.CustomerId AS ID,
+	sum(i.total) AS 'Total Purchases',
+	CASE WHEN sum(i.total) < 40 THEN 'Low Paying' ELSE 'High Paying' END AS 'Customer Category'
+FROM Customer c
+JOIN Invoice i
+ON c.CustomerId = i.CustomerId
+GROUP BY 1) AS t1
+GROUP BY 1
+
+
+
+#Fourth Query#
+
+SELECT t3.Artist, t3.Country, t3.count
+FROM (SELECT a.Name AS Artist, i.BillingCountry AS Country, count(*) AS count
+		FROM Artist a
+		JOIN Album al
+		ON a.ArtistId = al.ArtistId
+		JOIN Track t
+		ON al.AlbumId = t.AlbumId
+		JOIN InvoiceLine il
+		ON t.TrackId = il.TrackId
+		JOIN Invoice i
+		ON il.InvoiceId = i.InvoiceId
+		GROUP BY 1,2) t3
+JOIN (SELECT t1.Country, max(t1.count) AS max
+		FROM (SELECT a.Name AS Artist, i.BillingCountry AS Country, count(*) AS count
+		FROM Artist a
+		JOIN Album al
+		ON a.ArtistId = al.ArtistId
+		JOIN Track t
+		ON al.AlbumId = t.AlbumId
+		JOIN InvoiceLine il
+		ON t.TrackId = il.TrackId
+		JOIN Invoice i
+		ON il.InvoiceId = i.InvoiceId
+		GROUP BY 1,2
+		ORDER BY 2, 3 DESC) AS t1
+		GROUP BY 1) t2
+ON t2.Country = t3.Country AND t2.max = t3.count
+ORDER BY 2
